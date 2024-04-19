@@ -3,4 +3,7 @@
 use App\Http\Controllers\IndexController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [IndexController::class, "index"])->name("index");
+use App\Http\Controllers\DashboardController;
+
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
+
