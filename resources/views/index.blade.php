@@ -211,6 +211,37 @@
     </section>
     {{-- Finance Statistic: END  --}}
 
+    {{-- Finance Statistic: START  --}}
+    <section class="w-full h-1/2 grid grid-cols-12 gap-x-4 px-6">
+        <div class="relative col-span-8 w-full h-full">
+            <div class="flex justify-start items-center">
+                <h2 class="text-2xl font-semibold mb-4">Impact Secure Chart</h2>
+            </div>
+            <div class="relative w-full h-5/6" id="is-canvas-cont">
+                <canvas id="ISChart" style="width: 100%; height: 100%" data-drawn="false"></canvas>
+            </div>
+        </div>
+
+        <div class="relative col-span-4 w-full h-full">
+            <div class="flex items-center justify-start w-full h-fit">
+                <h2 class="text-2xl font-semibold mb-4">Finance Prediction</h2>
+            </div>
+        
+            <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                <p class="text-lg font-semibold">Omzet</p>
+                <p class="text-xl text-blue-700">Down</p>
+            </div>
+            <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                <p class="text-lg font-semibold">Impact Secure Sales</p>
+                <p class="text-xl text-blue-700">High</p>
+            </div>
+
+        </div>
+    </section>
+    {{-- Finance Statistic: END  --}}
+
+    
+
 
     <script>
         $(document).ready(function(){
