@@ -42,6 +42,23 @@ class DashboardController extends Controller
         return view('index', $data);
     }
 
+    public function get_moving_average($data, $period)
+    {
+        $movingAverage = [];
+        
+        for ($i = 0; $i < count($data); $i++) {
+            $sum = 0;
+            
+            for ($j = max(0, $i - $period + 1); $j <= $i; $j++) {
+                $sum += $data[$j];
+            }
+            
+            $movingAverage[] = $sum / min($period, $i + 1);
+        }
+        
+        return $movingAverage;
+    }
+
     public function get_omzet($range)
     {
         // Ambil data untuk grafik omzet sesuai dengan rentang waktu yang dipilih
@@ -68,10 +85,16 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        $labels = $data->pluck($range == 'monthly' ? 'month' : ($range == 'weekly' ? 'week' : 'day'));
         $omzet = $data->pluck('omzet');
+        $period = 3;
+        $ma = $this->get_moving_average($omzet->toarray(), $period);
+        $last_pred = end($ma);
+        $sec_las_pred = prev($ma);
+        $pred = $last_pred > $sec_las_pred ? 'increase' : 'decrease';
 
-        return response()->json(["labels" => $labels, "omzet" => $omzet]);
+        $labels = $data->pluck($range == 'monthly' ? 'month' : ($range == 'weekly' ? 'week' : 'day'));
+
+        return response()->json(["labels" => $labels, "omzet" => $omzet, "moving_average" => $ma, "omzet_prediction" => $pred]);
     }
 
     public function get_finance_statistic($period)
