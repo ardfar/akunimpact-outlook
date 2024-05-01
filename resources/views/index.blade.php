@@ -275,6 +275,8 @@
             update_omzet()
             update_impact_secure()
             update_stat()
+            update_payment_chart()
+            update_handler_chart()
             feather.replace();
         })
 
@@ -424,6 +426,7 @@
 
         function update_payment_chart(data){
             var canvas = reset_and_get_canvas("paymentChart", "payment-canvas-cont")
+            paymentRanks = @json($payment_method);
 
             canvas.attr("data-drawn", "true")
 
@@ -446,8 +449,8 @@
                         borderColor: [
                             // Define border colors for bars (optional)
                             'rgba(0, 0, 139, 1)',   // Dark blue
-                        'rgba(96, 165, 229, 1)',  // Light blue
-                        'rgba(77, 77, 77, 1)',  
+                            'rgba(96, 165, 229, 1)',  // Light blue
+                            'rgba(77, 77, 77, 1)',  
                             // Add more colors if needed
                         ],
                         borderWidth: 1
@@ -463,6 +466,39 @@
                     }
                 }
             });
+        }
+
+        function update_handler_chart(data){
+            var canvas = reset_and_get_canvas("handlerChart", "handler-canvas-cont")
+            var handlerLabels = @json($handler->pluck('handler_value'));  // Extract handler values as labels
+            var handlerData = @json($handler->pluck('count'));  // Extract counts as data values
+
+
+            canvas.attr("data-drawn", "true")
+
+            var ctx = canvas[0].getContext('2d');
+
+            var myChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: handlerLabels,
+                    datasets: [{
+                    label: 'Handler Distribution',
+                    data: handlerData,
+                    backgroundColor: [
+                        'rgba(0, 0, 139, 0.2)',  // Dark blue
+                            'rgba(96, 165, 229, 0.2)',  // Light blue
+                            'rgba(77, 77, 77, 0.2)',
+                    ],
+                    borderColor: [
+                        'rgba(0, 0, 139, 1)',  // Dark blue
+                            'rgba(96, 165, 229, 1)',  // Light blue
+                            'rgba(77, 77, 77, 1)',
+                    ],
+                    borderWidth: 0.5
+                    }]
+                }
+                });
         }
     </script>
 

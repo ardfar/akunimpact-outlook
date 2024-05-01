@@ -34,6 +34,8 @@ class DashboardController extends Controller
         $payment_rank = $this->get_payment_rank();
         $handler_stat = $this->get_handler_stat();
 
+        
+
         $data = [
             "monthOptions" => $monthOptions,
             "genStat" => [
@@ -277,7 +279,7 @@ class DashboardController extends Controller
             ];
         }
 
-        usort($handlerStats, function ($a, $b) {
+        usort($handler_stat, function ($a, $b) {
             return $b['count'] <=> $a['count'];
         });
 
