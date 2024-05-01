@@ -134,8 +134,8 @@
                 <div class="flex justify-start w-full h-fit mb-4">
                     <i data-feather="user" class="w-10 h-10 text-black"></i>
                 </div>
-                <p class="text-4xl text-blue-700">Micva</p>
-                <p class="text-lg font-semibold mt-2">Most Handling</p>
+                <p class="text-4xl text-blue-700">{{ $genStat["rank"]["handler"] }}</p>
+                <p class="text-lg font-semibold mt-2">Most Transaction Handler</p>
             </div>
 
             {{-- Preferred Payment method  --}}

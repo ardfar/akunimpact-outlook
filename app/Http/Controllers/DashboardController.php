@@ -32,6 +32,7 @@ class DashboardController extends Controller
         $monthly = $this->get_transaction_stat_monthly();
 
         $payment_rank = $this->get_payment_rank();
+        $handler_stat = $this->get_handler_stat();
 
         $data = [
             "monthOptions" => $monthOptions,
@@ -41,6 +42,7 @@ class DashboardController extends Controller
                 "monthly" => $monthly,
                 "rank" => [
                     "payment" => $payment_rank[0]["payment_method"],
+                    "handler" => $handler_stat[0]["handler_value"],
                 ]
             ]
         ];
@@ -216,5 +218,26 @@ class DashboardController extends Controller
 
         return $paymentRanks;
     }
+
+    public function get_handler_stat()
+    {
+        $data = $this->get_transaction_all();
+        $handlerValues = $data->pluck('handler')->unique();  // Get unique handler values
+
+        $handlerStats = [];
+        foreach ($handlerValues as $value) {
+            $handlerStats[] = [
+                'handler_value' => $value,
+                'count' => $data->where('handler', $value)->count(),  // Count occurrences of each value
+            ];
+        }
+
+        usort($handlerStats, function ($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });
+
+        return $handlerStats;
+    }
+
 
 }
