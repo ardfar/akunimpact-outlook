@@ -6,91 +6,143 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Carbon as SupportCarbon;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
-{
-    // Mendapatkan bulan dan tahun yang memiliki data
-    $availableMonths = Transaction::selectRaw('DATE_FORMAT(trx_time, "%Y-%m") as month')
-        ->distinct()
-        ->orderBy('month', 'desc')
-        ->pluck('month');
+    {
+        // Mendapatkan bulan dan tahun yang memiliki data
+        $availableMonths = Transaction::selectRaw('DATE_FORMAT(trx_time, "%Y-%m") as month')
+            ->distinct()
+            ->orderBy('month', 'desc')
+            ->pluck('month');
 
-    // Menyusun pilihan bulan dalam format yang sesuai
-    $monthOptions = [];
-    foreach ($availableMonths as $month) {
-        $formattedMonth = Carbon::parse($month)->format('Y-m');
-        $monthOptions[$formattedMonth] = Carbon::parse($formattedMonth)->format('F Y');
+        // Menyusun pilihan bulan dalam format yang sesuai
+        $monthOptions = [];
+        foreach ($availableMonths as $month) {
+            $formattedMonth = Carbon::parse($month)->format('Y-m');
+            $monthOptions[$formattedMonth] = Carbon::parse($formattedMonth)->format('F Y');
+        }
+
+        // Get Transaction Stats period based 
+        $daily = $this->get_transaction_stat_daily();
+        $weekly = $this->get_transaction_stat_weekly();
+        $monthly = $this->get_transaction_stat_monthly();
+
+        $data = [
+            "monthOptions" => $monthOptions,
+            "genStat" => [
+                "daily" => $daily,
+                "weekly" => $weekly,
+                "monthly" => $monthly
+            ]
+        ];
+
+        return view('index', $data);
     }
 
-    $range = $request->input('range', 'monthly');
-    $selectedMonth = $request->input('month');
+    public function get_omzet($range)
+    {
+        // Ambil data untuk grafik omzet sesuai dengan rentang waktu yang dipilih
+        if ($range == 'monthly') {
+            $data = Transaction::select(
+                DB::raw('DATE_FORMAT(trx_time, "%Y-%m") as month'),
+                DB::raw('SUM(deal_price) as omzet')
+            )
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+        } else if ($range == 'weekly') {
+            $data = Transaction::select(
+                DB::raw('CONCAT(YEAR(trx_time), "-", WEEK(trx_time)) as week'),
+                DB::raw('SUM(deal_price) as omzet')
+            )->groupBy('week')->orderBy('week')->get();
+        } else if ($range == 'daily') {
+            $data = Transaction::select(
+                DB::raw('DATE(trx_time) as day'),
+                DB::raw('SUM(deal_price) as omzet')
+            )
+                ->groupBy('day')
+                ->orderBy('day')
+                ->get();
+        }
 
-    // Ambil data untuk grafik omzet sesuai dengan rentang waktu yang dipilih
-    if ($range == 'monthly') {
-        $data = Transaction::select(
-            DB::raw('DATE_FORMAT(trx_time, "%Y-%m") as month'),
-            DB::raw('SUM(deal_price) as omzet')
-        )
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get();
-    } elseif ($range == 'weekly') {
-        $data = Transaction::select(
-            DB::raw('CONCAT(YEAR(trx_time), "-", WEEK(trx_time)) as week'),
-            DB::raw('SUM(deal_price) as omzet')
-        )
-        ->groupBy('week')
-        ->orderBy('week')
-        ->get();
-    } elseif ($range == 'daily') {
-        $data = Transaction::select(
-            DB::raw('DATE(trx_time) as day'),
-            DB::raw('SUM(deal_price) as omzet')
-        )
-        ->groupBy('day')
-        ->orderBy('day')
-        ->get();
+        $labels = $data->pluck($range == 'monthly' ? 'month' : ($range == 'weekly' ? 'week' : 'day'));
+        $omzet = $data->pluck('omzet');
+
+        return response()->json(["labels" => $labels, "omzet" => $omzet]);
     }
 
-    $labels = $data->pluck($range == 'monthly' ? 'month' : ($range == 'weekly' ? 'week' : 'day'));
-    $omzet = $data->pluck('omzet');
-
-    // Ambil data statistik hanya jika bulan dipilih, dan berlaku untuk rentang waktu bulanan
-    $statistics = null;
-    if ($selectedMonth && $range == 'monthly') {
+    public function get_finance_statistic($period)
+    {
         $statistics = Transaction::select(
             DB::raw('SUM(deal_price - nett_price) as profit'),
             DB::raw('SUM(deal_price) as omzet'),
-            DB::raw('AVG(deal_price - nett_price) as average_profit_per_trx')
+            DB::raw('AVG(deal_price - nett_price) as avg_profit')
         )
-        ->whereRaw('DATE_FORMAT(trx_time, "%Y-%m") = ?', [$selectedMonth])
-        ->first();
-    } elseif ($range == 'weekly') {
-        // Lakukan penghitungan statistik untuk rentang waktu mingguan
-        $statistics = Transaction::select(
-            DB::raw('SUM(deal_price - nett_price) as profit'),
-            DB::raw('SUM(deal_price) as omzet'),
-            DB::raw('AVG(deal_price - nett_price) as average_profit_per_trx')
-        )
-        ->groupBy(DB::raw('YEAR(trx_time)'), DB::raw('WEEK(trx_time)'))
-        ->orderBy(DB::raw('YEAR(trx_time)'), 'desc')
-        ->orderBy(DB::raw('WEEK(trx_time)'), 'desc')
-        ->first();
-    } elseif ($range == 'daily') {
-        $data = Transaction::select(
-            DB::raw('DATE(trx_time) as day'),
-            DB::raw('SUM(deal_price) as omzet')
-        )
-        ->groupBy('day')
-        ->orderBy(DB::raw('DATE(trx_time)'), 'desc')
-        ->get();
+            ->whereRaw('DATE_FORMAT(trx_time, "%Y-%m") = ?', [$period])
+            ->first();
+        return $statistics;
     }
-    
 
-    return view('index', compact('labels', 'omzet', 'statistics', 'monthOptions', 'selectedMonth'));
-}
+    public function get_difference_percentage($num1, $num2)
+    {
+        $difference = $num2 > 0 ? $num1 - $num2 : $num1;
+        if ($num2 > 0) {
+            $difference = ($difference / $num2) * 100;
+        } else {
+            $difference = 0; // Handle zero division by setting difference to 0
+        }
 
+        return $difference;
+    }
 
+    public function get_transaction_stat_weekly()
+    {
+        // Get current week TRX 
+        $count = Transaction::whereBetween("trx_time",[
+            Carbon::now()->startOfWeek(Carbon::MONDAY),
+            Carbon::now()->endOfWeek(Carbon::SUNDAY)
+        ])->count();
+
+        // Get last week TRX 
+        $count_old = Transaction::whereBetween("trx_time",[
+            Carbon::now()->subWeek()->startOfWeek(Carbon::MONDAY),
+            Carbon::now()->subWeek()->endOfWeek(Carbon::SUNDAY)
+        ])->count();
+
+        // get Differences 
+        $difference = $this->get_difference_percentage($count, $count_old);
+
+        return array("count"=> $count, "diff" => $difference);
+    }
+
+    public function get_transaction_stat_daily()
+    {
+        // Get current week TRX 
+        $count = Transaction::whereDate("trx_time", Carbon::now()->toDateString())->count();
+
+        // Get last week TRX 
+        $count_old = Transaction::whereDate("trx_time", Carbon::now()->toDateString())->count();
+
+        // get Differences 
+        $difference = $this->get_difference_percentage($count, $count_old);
+
+        return array("count"=> $count, "diff" => $difference);
+    }
+
+    public function get_transaction_stat_monthly()
+    {
+        // Get current week TRX 
+        $count = Transaction::whereYear("trx_time", Carbon::now()->year)->whereMonth("trx_time", Carbon::now()->month)->count();
+
+        // Get last week TRX 
+        $count_old = Transaction::whereYear("trx_time", Carbon::now()->subMonth()->year)->whereMonth("trx_time", Carbon::now()->subMonth()->month)->count();
+
+        // get Differences 
+        $difference = $this->get_difference_percentage($count, $count_old);
+
+        return array("count"=> $count, "diff" => $difference);
+    }
 }
