@@ -161,7 +161,7 @@
     {{-- GENERAL CARD : END  --}}
 
     {{-- Finance Statistic: START  --}}
-    <section class="w-full h-1/2 grid grid-cols-12 gap-x-4 px-6">
+    <section class="w-full h-1/2 grid grid-cols-12 gap-x-4 px-6 mt-6">
         <div class="relative col-span-8 w-full h-full">
             <div class="flex justify-between items-center">
                 <h2 class="text-2xl font-semibold mb-4">Omzet Chart</h2>
@@ -211,8 +211,8 @@
     </section>
     {{-- Finance Statistic: END  --}}
 
-    {{-- Finance Statistic: START  --}}
-    <section class="w-full h-1/2 grid grid-cols-12 gap-x-4 px-6">
+    {{-- Finance Prediction: START  --}}
+    <section class="w-full h-1/2 grid grid-cols-12 gap-x-4 px-6 mt-8">
         <div class="relative col-span-8 w-full h-full">
             <div class="flex justify-start items-center">
                 <h2 class="text-2xl font-semibold mb-4">Impact Secure Chart</h2>
@@ -223,41 +223,87 @@
         </div>
 
         <div class="relative col-span-4 w-full h-full">
-            <div class="flex items-center justify-start w-full h-fit">
+            <div class="w-full h-fit mb-4">
                 <h2 class="text-2xl font-semibold mb-4">Finance Prediction</h2>
+
+                <p class="capitalize">
+                    <span class="font-bold uppercase">
+                        disclaimer! 
+                    </span>
+                    these predictions were predicted based on their respective moving average which indicates the uptrend or downtrend.
+                </p>
             </div>
         
             <div class="bg-gray-100 rounded-lg p-4 mb-4">
                 <p class="text-lg font-semibold">Omzet</p>
-                <p class="text-xl text-blue-700">Down</p>
+                <p class="text-xl text-blue-700 capitalize" id="pred-omzet">Down</p>
             </div>
             <div class="bg-gray-100 rounded-lg p-4 mb-4">
                 <p class="text-lg font-semibold">Impact Secure Sales</p>
-                <p class="text-xl text-blue-700">High</p>
+                <p class="text-xl text-blue-700 capitalize" id="pred-is">High</p>
             </div>
 
         </div>
     </section>
-    {{-- Finance Statistic: END  --}}
+    {{-- Finance Prediction: END  --}}
 
+    {{-- Another Stat : START  --}}
+    <section class="w-full h-1/2 grid grid-cols-12 gap-x-4 px-6 mt-8">
+        <div class="relative col-span-8 w-full h-full">
+            <div class="flex justify-start items-center">
+                <h2 class="text-2xl font-semibold mb-4">Payment Methods Chart</h2>
+            </div>
+            <div class="relative w-full h-5/6" id="payment-canvas-cont">
+                <canvas id="paymentChart" style="width: 100%; height: 100%" data-drawn="false"></canvas>
+            </div>
+        </div>
+        <div class="relative col-span-4 w-full h-full">
+            <div class="flex justify-start items-center">
+                <h2 class="text-2xl font-semibold mb-4">Payment Methods Chart</h2>
+            </div>
+            <div class="relative w-full h-5/6" id="handler-canvas-cont">
+                <canvas id="handlerChart" style="width: 100%; height: 100%" data-drawn="false"></canvas>
+            </div>
+        </div>
+    </section>
+    {{-- Another Stat : END  --}}
     
 
 
     <script>
         $(document).ready(function(){
             update_omzet()
+            update_impact_secure()
             update_stat()
             feather.replace();
         })
-    </script>
-
-    <script>
 
         $("#range").change(function() {
             update_omzet()
+            update_impact_secure()
         });
 
+        function reset_and_get_canvas(id, container){
+            var canvas = $("#" + id);
 
+            if (canvas.attr("data-drawn") == "true")
+            {
+                canvas.remove();
+
+                $('<canvas/>',{
+                    id: id,
+                    style: 'width: 100%; height: 100%',
+                    "data-drawn": "false",
+                }).appendTo('#' + container);
+
+                canvas = $("#" + id)
+            }
+
+            return canvas
+        }
+    </script>
+
+    <script>
         function update_omzet() {
             var range = document.getElementById('range').value;
             $.ajax({
@@ -266,32 +312,15 @@
                     console.log(response)
 
                     update_omzet_chart(response)
+                    $("#pred-omzet").html(response["prediction"])
+
                 }
             })
         }
 
-        function reset_and_get_canvas(id){
-            var canvas = $("#" + id);
-
-            if (canvas.attr("data-drawn") == "true")
-            {
-                canvas.remove();
-
-                $('<canvas/>',{
-                    id: 'omzetChart',
-                    style: 'width: 100%; height: 100%',
-                    "data-drawn": "false",
-                }).appendTo('#canvas-cont');
-
-                canvas = $("#" + id)
-            }
-
-            return canvas
-        }
-
 
         function update_omzet_chart(data){
-            var canvas = reset_and_get_canvas("omzetChart")
+            var canvas = reset_and_get_canvas("omzetChart", "canvas-cont")
 
             canvas.attr("data-drawn", "true")
 
@@ -309,7 +338,7 @@
                         borderWidth: 1,
                         tension: 0.5
                     },{
-                        label: 'Omzet Trendline',
+                        label: 'Moving Average',
                         data: data["moving_average"],
                         backgroundColor: 'rgba(255, 99, 132, 0.2)',
                         borderColor: 'rgba(255, 99, 132, 1)',
@@ -332,8 +361,63 @@
                 }
             });
         }
-    
-        
+    </script>
+
+    <script>
+        function update_impact_secure() {
+            var range = document.getElementById('range').value;
+            $.ajax({
+                url: "{{ route('get-impact-secure') }}/" + range,
+                success: function (response){
+                    console.log(response)
+
+                    update_impact_secure_chart(response)
+                    $("#pred-is").html(response["prediction"])
+                }
+            })
+        }
+
+
+        function update_impact_secure_chart(data){
+            var canvas = reset_and_get_canvas("ISChart", "is-canvas-cont")
+
+            canvas.attr("data-drawn", "true")
+
+            var ctx = canvas[0].getContext('2d');
+
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data["labels"],
+                    datasets: [{
+                        label: 'Sales',
+                        data: data["impact_secure"],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        tension: 0.5
+
+                    }, {
+                        label: 'Moving Average',
+                        data: data["moving_average"],
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1,
+                        tension: 0.5
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                stepSize: 1 // Set step size to 1 for integer values
+                            }
+                        }]
+                    }
+                }
+            });
+        }
     </script>
 
     <script>

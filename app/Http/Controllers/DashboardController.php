@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon as SupportCarbon;
 class DashboardController extends Controller
 {
 
-    public function index(Request $request)
+    public function index()
     {
         // Mendapatkan bulan dan tahun yang memiliki data
         $availableMonths = Transaction::selectRaw('DATE_FORMAT(trx_time, "%Y-%m") as month')
@@ -102,7 +102,50 @@ class DashboardController extends Controller
 
         $labels = $data->pluck($range == 'monthly' ? 'month' : ($range == 'weekly' ? 'week' : 'day'));
 
-        return response()->json(["labels" => $labels, "omzet" => $omzet, "moving_average" => $ma, "omzet_prediction" => $pred]);
+        return response()->json(["labels" => $labels, "omzet" => $omzet, "moving_average" => $ma, "prediction" => $pred]);
+    }
+
+    public function get_impact_secure($range)
+    {
+        $period = 3;
+        $data = [];
+        if ($range == 'monthly') {
+            $data = Transaction::select(
+                DB::raw('DATE_FORMAT(trx_time, "%Y-%m") as month'),
+                DB::raw('SUM(CASE WHEN impact_secure = "Yes" THEN 1 ELSE 0 END) as impact_secure_count')
+            )
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+        } elseif ($range == 'weekly') {
+            $data = Transaction::select(
+                DB::raw('CONCAT(YEAR(trx_time), "-", WEEK(trx_time)) as week'),
+                DB::raw('SUM(CASE WHEN impact_secure = "Yes" THEN 1 ELSE 0 END) as impact_secure_count')
+            )
+            ->groupBy('week')
+            ->orderBy('week')
+            ->get();
+        } elseif ($range == 'daily') {
+            $data = Transaction::select(
+                DB::raw('DATE(trx_time) as day'),
+                DB::raw('SUM(CASE WHEN impact_secure = "Yes" THEN 1 ELSE 0 END) as impact_secure_count')
+            )
+            ->groupBy('day')
+            ->orderBy('day')
+            ->get();
+        }
+
+        $impactSecureCounts = $data->pluck('impact_secure_count')->toArray();
+        $ma = $this->get_moving_average($impactSecureCounts, $period);
+        $last_pred = end($ma);
+        $sec_las_pred = prev($ma);
+        $pred = $last_pred > $sec_las_pred ? 'increase' : 'decrease';
+
+        // dd($data->pluck("impact_secure_count"));
+
+        $labels = $data->pluck($range == 'monthly' ? 'month' : ($range == 'weekly' ? 'week' : 'day'));
+
+        return response()->json(["labels" => $labels, "impact_secure" => $impactSecureCounts, "moving_average" => $ma, "prediction" => $pred]);
     }
 
     public function get_finance_statistic($period)
