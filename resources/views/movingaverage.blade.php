@@ -20,9 +20,17 @@
             <button onclick="updateChart()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Submit</button>
         </div>
         <canvas id="omzetChart" width="650" height="250"></canvas>
+        <p class="text-lg font-semibold">Predicted Profit Trend:</p>
+        <p class="text-xl {{ $profitTrend == 'increase' ? 'text-green-500' : 'text-red-500' }}">
+        {{ ucfirst($profitTrend) }}
+        </p>
 
         <h1 class="text-2xl font-semibold mb-4">Impact Secure Sales Prediction</h1>
         <canvas id="impactSecureChart" width="650" height="250"></canvas>
+        <p class="text-lg font-semibold">Predicted Impact Secure Sales Trend:</p>
+        <p class="text-xl {{ $impactTrend == 'increase' ? 'text-green-500' : 'text-red-500' }}">
+        {{ ucfirst($impactTrend) }}
+        </p>
 
         <h1 class="text-2xl font-semibold mt-8 mb-4">Statistics</h1>
         <form action="{{ route('moving_average.index') }}" method="GET" class="mb-4">

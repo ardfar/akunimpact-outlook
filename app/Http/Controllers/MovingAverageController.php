@@ -94,6 +94,14 @@ class MovingAverageController extends Controller
         $impactSecureCounts = $impactSecureData->pluck('impact_secure_count')->toArray();
         $impactSecurePrediction = $this->calculateMovingAverage($impactSecureCounts, $period);
 
+        $lastPrediction = end($profitPrediction);
+        $secondLastPrediction = prev($profitPrediction);
+        $profitTrend = $lastPrediction > $secondLastPrediction ? 'increase' : 'decrease';
+
+        $lastImpactPrediction = end($impactSecurePrediction);
+        $secondImpactLastPrediction = prev($impactSecurePrediction);
+        $impactTrend = $lastImpactPrediction > $secondImpactLastPrediction ? 'increase' : 'decrease';
+
         $availableMonths = Transaction::selectRaw('DATE_FORMAT(trx_time, "%Y-%m") as month')
             ->distinct()
             ->orderBy('month', 'desc')
@@ -140,7 +148,7 @@ class MovingAverageController extends Controller
         return view('movingaverage', compact(
             'labels', 'omzet', 'statistics', 'monthOptions', 
             'selectedMonth', 'profitPrediction',
-            'impactSecureCounts', 'impactSecurePrediction' // Add these variables
+            'impactSecureCounts', 'impactSecurePrediction','profitTrend', 'impactTrend' // Add these variables
         ));
     }
 }
