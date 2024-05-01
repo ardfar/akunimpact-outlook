@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\IndexController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MovingAverageController;
 
-Route::get('/', [IndexController::class, "index"])->name("index");
+Route::get('/', [MovingAverageController::class, 'index'])->name('moving_average.index');
