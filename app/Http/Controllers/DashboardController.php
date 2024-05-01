@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon as SupportCarbon;
 
 class DashboardController extends Controller
 {
+
     public function index(Request $request)
     {
         // Mendapatkan bulan dan tahun yang memiliki data
@@ -30,12 +31,17 @@ class DashboardController extends Controller
         $weekly = $this->get_transaction_stat_weekly();
         $monthly = $this->get_transaction_stat_monthly();
 
+        $payment_rank = $this->get_payment_rank();
+
         $data = [
             "monthOptions" => $monthOptions,
             "genStat" => [
                 "daily" => $daily,
                 "weekly" => $weekly,
-                "monthly" => $monthly
+                "monthly" => $monthly,
+                "rank" => [
+                    "payment" => $payment_rank[0]["payment_method"],
+                ]
             ]
         ];
 
@@ -168,4 +174,47 @@ class DashboardController extends Controller
 
         return array("count"=> $count, "diff" => $difference);
     }
+
+    public function get_transaction_all()
+    {
+        $transactions = Transaction::select(
+            'buyer_payments',
+            'seller_payments',
+            'handler'  // Add handler selection to query
+        )
+        ->get();
+        return $transactions;
+    }
+
+    public function get_payment_rank()
+    {
+        $allMethods = [];  // Store all payment methods
+        $data = $this->get_transaction_all();
+
+        foreach ($data as $transaction) {
+            $buyerMethods = explode(",", $transaction->buyer_payments);  // Explode buyer methods
+            $sellerMethods = explode(",", $transaction->seller_payments);  // Explode seller methods
+
+            // Combine methods from both sides
+            $allMethods = array_merge($allMethods, $buyerMethods, $sellerMethods);
+        }
+
+        // Count occurrences of each method
+        $methodCounts = array_count_values($allMethods);
+
+        $paymentRanks = [];
+        foreach ($methodCounts as $method => $count) {
+            $paymentRanks[] = [
+                'payment_method' => $method,
+                'count' => $count,
+            ];
+        }
+
+        usort($paymentRanks, function ($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });  // Sort by count descending
+
+        return $paymentRanks;
+    }
+
 }

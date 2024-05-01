@@ -143,7 +143,7 @@
                 <div class="flex justify-start w-full h-fit mb-4">
                     <i data-feather="credit-card" class="w-10 h-10 text-black"></i>
                 </div>
-                <p class="text-4xl text-blue-700">BCA</p>
+                <p class="text-4xl text-blue-700">{{ $genStat["rank"]["payment"] }}</p>
                 <p class="text-lg font-semibold mt-2">Preferred Payment Method</p>
             </div>
 
