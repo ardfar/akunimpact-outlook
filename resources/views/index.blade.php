@@ -421,6 +421,52 @@
     </script>
 
     <script>
+
+        function update_payment_chart(data){
+            var canvas = reset_and_get_canvas("paymentChart", "payment-canvas-cont")
+
+            canvas.attr("data-drawn", "true")
+
+            var ctx = canvas[0].getContext('2d');
+
+            var myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: paymentRanks.map(rank => rank.payment_method),  // Extract payment methods as labels
+                    datasets: [{
+                        label: 'Payment Method Counts',
+                        data: paymentRanks.map(rank => rank.count),  // Extract counts as data values
+                        backgroundColor: [
+                            // Define background colors for bars (optional)
+                            'rgba(0, 0, 139, 0.2)',  // Dark blue
+                            'rgba(96, 165, 229, 0.2)',  // Light blue
+                            'rgba(77, 77, 77, 0.2)',
+                            // Add more colors if needed
+                        ],
+                        borderColor: [
+                            // Define border colors for bars (optional)
+                            'rgba(0, 0, 139, 1)',   // Dark blue
+                        'rgba(96, 165, 229, 1)',  // Light blue
+                        'rgba(77, 77, 77, 1)',  
+                            // Add more colors if needed
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+    </script>
+
+    <script>
         $("#period").change(function() {
             update_stat()
         });

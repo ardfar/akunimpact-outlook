@@ -44,7 +44,9 @@ class DashboardController extends Controller
                     "payment" => $payment_rank[0]["payment_method"],
                     "handler" => $handler_stat[0]["handler_value"],
                 ]
-            ]
+            ],
+            "payment_method" => $payment_rank,
+            "handler" => $handler_stat
         ];
 
         return view('index', $data);
