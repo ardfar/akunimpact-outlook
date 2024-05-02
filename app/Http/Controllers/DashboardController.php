@@ -31,10 +31,12 @@ class DashboardController extends Controller
         $weekly = $this->get_transaction_stat_weekly();
         $monthly = $this->get_transaction_stat_monthly();
 
+        // dd($weekly);
+
         $payment_rank = $this->get_payment_rank();
         $handler_stat = $this->get_handler_stat();
 
-        
+        $recent_trx = Transaction::latest("trx_time")->take(10)->get();
 
         $data = [
             "monthOptions" => $monthOptions,
@@ -45,13 +47,29 @@ class DashboardController extends Controller
                 "rank" => [
                     "payment" => $payment_rank[0]["payment_method"],
                     "handler" => $handler_stat[0]["handler_value"],
-                ]
+                ],
+                "best_cat" => $this->get_best_category()
             ],
+            "recent_trx" => $recent_trx,
             "payment_method" => $payment_rank,
             "handler" => $handler_stat
         ];
 
+        // dd($data["handler"]);
+
         return view('index', $data);
+    }
+
+    public function get_best_category()
+    {
+        $mostFrequentCategory = Transaction::select('category', DB::raw('COUNT(*) as count'))
+        ->groupBy('category')
+        ->orderByDesc('count')
+        ->first();
+    
+        $category = $mostFrequentCategory->category;
+
+        return $category;
     }
 
     public function get_moving_average($data, $period)
@@ -167,12 +185,12 @@ class DashboardController extends Controller
     public function get_difference_percentage($num1, $num2)
     {
         $difference = $num2 > 0 ? $num1 - $num2 : $num1;
+        // dd($num1 - $num2);
         if ($num2 > 0) {
             $difference = ($difference / $num2) * 100;
         } else {
             $difference = 0; // Handle zero division by setting difference to 0
         }
-
         return $difference;
     }
 
@@ -192,7 +210,7 @@ class DashboardController extends Controller
 
         // get Differences 
         $difference = $this->get_difference_percentage($count, $count_old);
-
+        // dd($difference);
         return array("count"=> $count, "diff" => $difference);
     }
 
@@ -206,7 +224,7 @@ class DashboardController extends Controller
 
         // get Differences 
         $difference = $this->get_difference_percentage($count, $count_old);
-
+        // dd($difference);
         return array("count"=> $count, "diff" => $difference);
     }
 
@@ -220,6 +238,8 @@ class DashboardController extends Controller
 
         // get Differences 
         $difference = $this->get_difference_percentage($count, $count_old);
+
+        // dd($count);
 
         return array("count"=> $count, "diff" => $difference);
     }
@@ -279,9 +299,11 @@ class DashboardController extends Controller
             ];
         }
 
-        usort($handler_stat, function ($a, $b) {
+        usort($handlerStats, function ($a, $b) {
             return $b['count'] <=> $a['count'];
         });
+
+        // dd($handlerStats);
 
         return $handlerStats;
     }

@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>AkunImpact Outlook</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
@@ -17,13 +17,11 @@
     <header class="w-full h-fit mt-10 px-6">
         {{-- Header Title  --}}
         <div class="w-full h-fit flex justify-between mb-6">
-            <h2 class="text-2xl font-semibold">General Statistics</h2>
-            <p>
-                period 
-                <span id="period-start"></span>
-                -
-                <span id="period-end"></span>
-            </p>
+            <h2 class="text-2xl font-semibold">AkunImpact Outlook</h2>
+            <div class="flex items-center justify-evenly gap-x-2 px-4 py-2 text-center bg-red-500 text-white rounded-lg">
+                <i data-feather="file-text" class="w-4 h-4 text-white"></i>
+                Export to PDF
+            </div>
         </div>
 
         {{-- Card Container  --}}
@@ -32,19 +30,19 @@
             <div class="col-span-2 bg-gray-100 rounded-lg p-4 mb-4">
                 <div class="flex justify-between w-full h-fit mb-4">
                     <i data-feather="activity" class="w-10 h-10 text-black"></i>
-                    @if ($genStat["daily"]["count"] > 0)
+                    @if ($genStat["daily"]["diff"] > 0)
                         <div class="flex items-center justify-between text-white bg-green-500 h-8 px-2 gap-x-1 rounded-lg">
                             <i data-feather="arrow-up" class="w-4 h-4 text-white inline"></i>
                             <span class="text-sm inline">
-                                {{ $genStat["daily"]["count"] }}%
+                                {{ number_format($genStat["daily"]["diff"], 2, ".", ",") }}%
                             </span>
                         </div>
                         
-                    @elseif ($genStat["daily"]["count"] < 0)
+                    @elseif ($genStat["daily"]["diff"] < 0)
                         <div class="flex items-center justify-between text-white bg-red-500 h-8 px-2 gap-x-1 rounded-lg">
                             <i data-feather="arrow-up" class="w-4 h-4 text-white inline"></i>
                             <span class="text-sm inline">
-                                {{ $genStat["daily"]["count"] }}%
+                                {{ number_format($genStat["daily"]["diff"], 2, ".", ",") }}%
                             </span>
                         </div>
 
@@ -67,19 +65,19 @@
             <div class="col-span-2 bg-gray-100 rounded-lg p-4 mb-4">
                 <div class="flex justify-between w-full h-fit mb-4">
                     <i data-feather="bar-chart" class="w-10 h-10 text-black"></i>
-                    @if ($genStat["weekly"]["count"] > 0)
+                    @if ($genStat["weekly"]["diff"] > 0)
                         <div class="flex items-center justify-between text-white bg-green-500 h-8 px-2 gap-x-1 rounded-lg">
                             <i data-feather="arrow-up" class="w-4 h-4 text-white inline"></i>
                             <span class="text-sm inline">
-                                {{ $genStat["weekly"]["count"] }}%
+                                {{ number_format($genStat["weekly"]["diff"], 2, ".", ",") }}%
                             </span>
                         </div>
                         
-                    @elseif ($genStat["weekly"]["count"] < 0)
+                    @elseif ($genStat["weekly"]["diff"] < 0)
                         <div class="flex items-center justify-between text-white bg-red-500 h-8 px-2 gap-x-1 rounded-lg">
-                            <i data-feather="arrow-up" class="w-4 h-4 text-white inline"></i>
+                            <i data-feather="arrow-down" class="w-4 h-4 text-white inline"></i>
                             <span class="text-sm inline">
-                                {{ $genStat["weekly"]["count"] }}%
+                                {{ number_format($genStat["weekly"]["diff"], 2, ".", ",") }}%
                             </span>
                         </div>
                         
@@ -100,19 +98,19 @@
             <div class="col-span-2 bg-gray-100 rounded-lg p-4 mb-4">
                 <div class="flex justify-between w-full h-fit mb-4">
                     <i data-feather="bar-chart-2" class="w-10 h-10 text-black"></i>
-                    @if ($genStat["monthly"]["count"] > 0)
+                    @if ($genStat["monthly"]["diff"] > 0)
                         <div class="flex items-center justify-between text-white bg-green-500 h-8 px-2 gap-x-1 rounded-lg">
                             <i data-feather="arrow-up" class="w-4 h-4 text-white inline"></i>
                             <span class="text-sm inline">
-                                {{ $genStat["monthly"]["count"] }}%
+                                {{ number_format($genStat["monthly"]["diff"], 2, ".", ",") }}%
                             </span>
                         </div>
                         
-                    @elseif ($genStat["monthly"]["count"] < 0)
+                    @elseif ($genStat["monthly"]["diff"] < 0)
                         <div class="flex items-center justify-between text-white bg-red-500 h-8 px-2 gap-x-1 rounded-lg">
-                            <i data-feather="arrow-up" class="w-4 h-4 text-white inline"></i>
+                            <i data-feather="arrow-down" class="w-4 h-4 text-white inline"></i>
                             <span class="text-sm inline">
-                                {{ $genStat["monthly"]["count"] }}%
+                                {{ number_format($genStat["monthly"]["diff"], 2, ".", ",") }}%
                             </span>
                         </div>
                         
@@ -152,7 +150,7 @@
                 <div class="flex justify-start w-full h-fit mb-4">
                     <i data-feather="tag" class="w-10 h-10 text-black"></i>
                 </div>
-                <p class="text-4xl text-blue-700">Account Sales</p>
+                <p class="text-4xl text-blue-700 capitalize">{{ $genStat["best_cat"] }}</p>
                 <p class="text-lg font-semibold mt-2">Best Category</p>
             </div>
         </div>
@@ -249,25 +247,98 @@
 
     {{-- Another Stat : START  --}}
     <section class="w-full h-1/2 grid grid-cols-12 gap-x-4 px-6 mt-8">
-        <div class="relative col-span-8 w-full h-full">
+        <div class="relative col-span-9 w-full h-full">
             <div class="flex justify-start items-center">
                 <h2 class="text-2xl font-semibold mb-4">Payment Methods Chart</h2>
             </div>
-            <div class="relative w-full h-5/6" id="payment-canvas-cont">
+            <div class="relative w-full h-5/6 flex items-center" id="payment-canvas-cont">
                 <canvas id="paymentChart" style="width: 100%; height: 100%" data-drawn="false"></canvas>
             </div>
         </div>
-        <div class="relative col-span-4 w-full h-full">
-            <div class="flex justify-start items-center">
-                <h2 class="text-2xl font-semibold mb-4">Payment Methods Chart</h2>
+        <div class="relative col-span-3 w-full h-full">
+            <div class="flex justify-center items-center">
+                <h2 class="text-2xl font-semibold mb-4 text-center">Payment Methods Chart</h2>
             </div>
-            <div class="relative w-full h-5/6" id="handler-canvas-cont">
+            <div class="relative w-full h-5/6 flex items-center justify-center" id="handler-canvas-cont">
                 <canvas id="handlerChart" style="width: 100%; height: 100%" data-drawn="false"></canvas>
             </div>
         </div>
     </section>
     {{-- Another Stat : END  --}}
     
+    {{-- Data Display : START  --}}
+    <section class="w-full h-fit px-6 my-10">
+        {{-- Header Title  --}}
+        <div class="w-full h-fit flex justify-between mb-6">
+            <h2 class="text-2xl font-semibold">Recent Transactions</h2>
+            <a href="{{ route("add-record") }}" class="flex items-center justify-evenly gap-x-2 px-4 py-2 text-center bg-green-500 text-white rounded-lg">
+                <i data-feather="plus-square" class="w-4 h-4 text-white"></i>
+                Add Record
+            </a>
+        </div>
+
+        {{-- Card Container  --}}
+        <div class="w-full h-fit grid grid-cols-12 gap-y-2">
+            {{-- Daily Transaction  --}}
+            <div class="grid grid-cols-12 col-span-12 bg-gray-100 rounded-lg p-4 mb-4 text-center">
+                <p class="text-xl text-blue-700">
+                    Date
+                </p>
+                <p class="text-xl text-blue-700 col-span-2">
+                    Code
+                </p>
+                <p class="text-xl text-blue-700">
+                    Category
+                </p>
+                <p class="text-xl text-blue-700 col-span-2">
+                    Selling Price
+                </p>
+                <p class="text-xl text-blue-700 col-span-2">
+                    Profits
+                </p>
+                <p class="text-xl text-blue-700">
+                    Method
+                </p>
+                <p class="text-xl text-blue-700 col-span-2">
+                    Impact Secure
+                </p>
+                <p class="text-xl text-blue-700">
+                    Handler
+                </p>
+            </div>
+
+            @foreach ($recent_trx as $item)
+            <div class="grid grid-cols-12 col-span-12 bg-gray-100 rounded-lg p-4 mb-4 text-center">
+                <p class="text-lg black">
+                    {{ \Carbon\Carbon::parse($item->trx_time)->toDateString() }}
+                </p>
+                <p class="text-lg black col-span-2">
+                    {{ $item->code }}
+                </p>
+                <p class="text-lg black">
+                    {{ $item->category }}
+                </p>
+                <p class="text-lg black col-span-2">
+                    {{ number_format($item->deal_price, 0, ',', '.') }}
+                </p>
+                <p class="text-lg black col-span-2">
+                    {{ number_format(($item->deal_price - $item->net_price), 0, ',', '.') }}
+                </p>
+                <p class="text-lg black">
+                    {{ $item->buyer_payments }}
+                </p>
+                <p class="text-lg black col-span-2">
+                    {{ $item->impact_secure }}
+                </p>
+                <p class="text-lg black">
+                    {{ $item->handler }}
+                </p>
+            </div>
+            @endforeach
+        </div>
+        
+    </header>
+    {{-- Data Display : END  --}}
 
 
     <script>
@@ -453,7 +524,7 @@
                             'rgba(77, 77, 77, 1)',  
                             // Add more colors if needed
                         ],
-                        borderWidth: 1
+                        borderWidth: 1,
                     }]
                 },
                 options: {
@@ -470,8 +541,7 @@
 
         function update_handler_chart(data){
             var canvas = reset_and_get_canvas("handlerChart", "handler-canvas-cont")
-            var handlerLabels = @json($handler->pluck('handler_value'));  // Extract handler values as labels
-            var handlerData = @json($handler->pluck('count'));  // Extract counts as data values
+            data = @json($handler)  // Extract counts as data values
 
 
             canvas.attr("data-drawn", "true")
@@ -481,21 +551,26 @@
             var myChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: handlerLabels,
+                    labels: data.map(item => item.handler_value),
                     datasets: [{
-                    label: 'Handler Distribution',
-                    data: handlerData,
-                    backgroundColor: [
-                        'rgba(0, 0, 139, 0.2)',  // Dark blue
+                        label: 'Handler Distribution',
+                        data: data.map(item => item.count),
+                        backgroundColor: [
+                            'rgba(0, 0, 139, 0.2)',  // Dark blue
                             'rgba(96, 165, 229, 0.2)',  // Light blue
                             'rgba(77, 77, 77, 0.2)',
-                    ],
-                    borderColor: [
-                        'rgba(0, 0, 139, 1)',  // Dark blue
+                            "rgba(253,158,0.2)",
+                            "rgba(255,242,0, 0.2)"
+                        ],
+                        borderColor: [
+                            'rgba(0, 0, 139, 1)',  // Dark blue
                             'rgba(96, 165, 229, 1)',  // Light blue
                             'rgba(77, 77, 77, 1)',
-                    ],
-                    borderWidth: 0.5
+                            "rgba(253,158,1)",
+                            "rgba(255,242,0, 1)"
+
+                        ],
+                        borderWidth: 0.5,
                     }]
                 }
                 });
